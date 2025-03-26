@@ -6,6 +6,7 @@ export default function Allrate() {
   const [searchTerm, setSearchTerm] = useState("");
   const [rates, setRates] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingRateId, setEditingRateId] = useState(null);
   const [newRate, setNewRate] = useState({
     currency: "",
     denom: "",
@@ -16,35 +17,56 @@ export default function Allrate() {
 
   const API_URL = "https://exchangerate-server-p-907301d4b083.herokuapp.com/api/rates";
 
-  // 🔹 โหลดเรททั้งหมดจาก API
   useEffect(() => {
-    axios.get(API_URL)
-      .then((res) => setRates(res.data))
-      .catch((err) => console.error("Fetch error:", err));
+    fetchRates();
   }, []);
 
-  // 🔹 เพิ่มเรทใหม่
-  const handleAddRate = async (e) => {
-    e.preventDefault();
+  const fetchRates = () => {
+    axios
+      .get(API_URL)
+      .then((res) => setRates(res.data))
+      .catch((err) => console.error("Fetch error:", err));
+  };
 
+  const handleAddOrEditRate = async (e) => {
+    e.preventDefault();
     const formData = new FormData();
     formData.append("currency", newRate.currency);
     formData.append("denom", newRate.denom);
     formData.append("buying", newRate.buying);
     formData.append("selling", newRate.selling);
-    formData.append("flag", newRate.flagFile);
+    if (newRate.flagFile) {
+      formData.append("flag", newRate.flagFile);
+    }
 
     try {
-      const res = await axios.post(API_URL, formData);
-      setRates([res.data.newRate, ...rates]); // เพิ่มเรทใหม่ใน list
+      if (editingRateId !== null) {
+        await axios.put(`${API_URL}/${editingRateId}`, formData);
+      } else {
+        await axios.post(API_URL, formData);
+      }
+      fetchRates();
       setIsModalOpen(false);
+      setEditingRateId(null);
       setNewRate({ currency: "", denom: "", buying: "", selling: "", flagFile: null });
     } catch (err) {
-      console.error("Add error:", err);
+      console.error("Save error:", err);
     }
   };
 
-  const filteredRates = rates.filter(rate =>
+  const openEditModal = (rate) => {
+    setNewRate({
+      currency: rate.currency,
+      denom: rate.denom,
+      buying: rate.buying,
+      selling: rate.selling,
+      flagFile: null,
+    });
+    setEditingRateId(rate.id);
+    setIsModalOpen(true);
+  };
+
+  const filteredRates = rates.filter((rate) =>
     rate.currency.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -53,7 +75,11 @@ export default function Allrate() {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold text-gray-800">รายการอัตราแลกเปลี่ยน</h2>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setNewRate({ currency: "", denom: "", buying: "", selling: "", flagFile: null });
+            setEditingRateId(null);
+            setIsModalOpen(true);
+          }}
           className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded"
         >
           ➕ เพิ่มอัตราแลกเปลี่ยน
@@ -86,7 +112,7 @@ export default function Allrate() {
           </thead>
           <tbody>
             {filteredRates.map((rate, index) => (
-              <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-yellow-50"}>
+              <tr key={rate.id} className={index % 2 === 0 ? "bg-white" : "bg-yellow-50"}>
                 <td className="px-4 py-2 border flex items-center gap-2">
                   {rate.flag_url && (
                     <img src={rate.flag_url} alt="flag" className="w-6 h-4 border rounded" />
@@ -99,7 +125,7 @@ export default function Allrate() {
                 <td className="px-4 py-2 border text-center">
                   <button
                     className="text-blue-600 hover:text-blue-800"
-                    onClick={() => alert("ยังไม่ได้เชื่อมระบบแก้ไข")}
+                    onClick={() => openEditModal(rate)}
                   >
                     <FaEdit />
                   </button>
@@ -110,7 +136,6 @@ export default function Allrate() {
         </table>
       )}
 
-      {/* ✅ MODAL เพิ่มเรท */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white p-6 rounded-lg w-full max-w-md relative shadow-md font-[Prompt]">
@@ -120,8 +145,10 @@ export default function Allrate() {
             >
               <FaTimes />
             </button>
-            <h3 className="text-lg font-bold mb-4 text-gray-800">เพิ่มอัตราแลกเปลี่ยนใหม่</h3>
-            <form onSubmit={handleAddRate} className="space-y-3">
+            <h3 className="text-lg font-bold mb-4 text-gray-800">
+              {editingRateId !== null ? "แก้ไขอัตราแลกเปลี่ยน" : "เพิ่มอัตราแลกเปลี่ยนใหม่"}
+            </h3>
+            <form onSubmit={handleAddOrEditRate} className="space-y-3">
               <input
                 type="text"
                 placeholder="Currency เช่น USD 🇺🇸"
@@ -165,7 +192,7 @@ export default function Allrate() {
                 type="submit"
                 className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded w-full"
               >
-                ➕ บันทึกเรท
+                {editingRateId !== null ? "📀 บันทึกการแก้ไข" : "➕ บันทึกเรท"}
               </button>
             </form>
           </div>
