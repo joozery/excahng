@@ -1,0 +1,176 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { FaEdit, FaSearch, FaTimes } from "react-icons/fa";
+
+export default function Allrate() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [rates, setRates] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newRate, setNewRate] = useState({
+    currency: "",
+    denom: "",
+    buying: "",
+    selling: "",
+    flagFile: null,
+  });
+
+  const API_URL = "https://exchangerate-server-p-907301d4b083.herokuapp.com/api/rates";
+
+  // 🔹 โหลดเรททั้งหมดจาก API
+  useEffect(() => {
+    axios.get(API_URL)
+      .then((res) => setRates(res.data))
+      .catch((err) => console.error("Fetch error:", err));
+  }, []);
+
+  // 🔹 เพิ่มเรทใหม่
+  const handleAddRate = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("currency", newRate.currency);
+    formData.append("denom", newRate.denom);
+    formData.append("buying", newRate.buying);
+    formData.append("selling", newRate.selling);
+    formData.append("flag", newRate.flagFile);
+
+    try {
+      const res = await axios.post(API_URL, formData);
+      setRates([res.data.newRate, ...rates]); // เพิ่มเรทใหม่ใน list
+      setIsModalOpen(false);
+      setNewRate({ currency: "", denom: "", buying: "", selling: "", flagFile: null });
+    } catch (err) {
+      console.error("Add error:", err);
+    }
+  };
+
+  const filteredRates = rates.filter(rate =>
+    rate.currency.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="bg-white p-6 rounded shadow-md max-w-6xl font-[Prompt] relative">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold text-gray-800">รายการอัตราแลกเปลี่ยน</h2>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded"
+        >
+          ➕ เพิ่มอัตราแลกเปลี่ยน
+        </button>
+      </div>
+
+      <div className="relative mb-4 max-w-sm">
+        <FaSearch className="absolute left-3 top-2.5 text-gray-400" />
+        <input
+          type="text"
+          placeholder="ค้นหาสกุลเงิน เช่น USD, EUR"
+          className="pl-10 pr-4 py-2 border border-gray-300 rounded w-full"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {filteredRates.length === 0 ? (
+        <p className="text-gray-500">ไม่พบข้อมูลที่ค้นหา</p>
+      ) : (
+        <table className="min-w-full border border-gray-200 text-sm">
+          <thead className="bg-yellow-400 text-black font-semibold">
+            <tr>
+              <th className="px-4 py-2 border text-left">Currency</th>
+              <th className="px-4 py-2 border text-left">Denom</th>
+              <th className="px-4 py-2 border text-left">Buy</th>
+              <th className="px-4 py-2 border text-left">Sell</th>
+              <th className="px-4 py-2 border text-center">การจัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRates.map((rate, index) => (
+              <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-yellow-50"}>
+                <td className="px-4 py-2 border flex items-center gap-2">
+                  {rate.flag_url && (
+                    <img src={rate.flag_url} alt="flag" className="w-6 h-4 border rounded" />
+                  )}
+                  {rate.currency}
+                </td>
+                <td className="px-4 py-2 border">{rate.denom}</td>
+                <td className="px-4 py-2 border text-green-600 font-semibold">{rate.buying}</td>
+                <td className="px-4 py-2 border text-red-500 font-semibold">{rate.selling}</td>
+                <td className="px-4 py-2 border text-center">
+                  <button
+                    className="text-blue-600 hover:text-blue-800"
+                    onClick={() => alert("ยังไม่ได้เชื่อมระบบแก้ไข")}
+                  >
+                    <FaEdit />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {/* ✅ MODAL เพิ่มเรท */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md relative shadow-md font-[Prompt]">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+            >
+              <FaTimes />
+            </button>
+            <h3 className="text-lg font-bold mb-4 text-gray-800">เพิ่มอัตราแลกเปลี่ยนใหม่</h3>
+            <form onSubmit={handleAddRate} className="space-y-3">
+              <input
+                type="text"
+                placeholder="Currency เช่น USD 🇺🇸"
+                value={newRate.currency}
+                onChange={(e) => setNewRate({ ...newRate, currency: e.target.value })}
+                className="w-full border border-gray-300 px-3 py-2 rounded"
+              />
+              <input
+                type="text"
+                placeholder="Denomination เช่น 100"
+                value={newRate.denom}
+                onChange={(e) => setNewRate({ ...newRate, denom: e.target.value })}
+                className="w-full border border-gray-300 px-3 py-2 rounded"
+              />
+              <input
+                type="text"
+                placeholder="Buy Rate"
+                value={newRate.buying}
+                onChange={(e) => setNewRate({ ...newRate, buying: e.target.value })}
+                className="w-full border border-gray-300 px-3 py-2 rounded"
+              />
+              <input
+                type="text"
+                placeholder="Sell Rate"
+                value={newRate.selling}
+                onChange={(e) => setNewRate({ ...newRate, selling: e.target.value })}
+                className="w-full border border-gray-300 px-3 py-2 rounded"
+              />
+              <div>
+                <label className="block text-gray-700 mb-1">อัปโหลดธง</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setNewRate({ ...newRate, flagFile: e.target.files[0] })
+                  }
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded w-full"
+              >
+                ➕ บันทึกเรท
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
