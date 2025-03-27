@@ -10,13 +10,12 @@ export default function ExchangeRates() {
   const totalPages = Math.ceil(rates.length / itemsPerPage);
 
   useEffect(() => {
-    // 🔹 เรียก API ดึงข้อมูลเรท
-    axios.get("https://exchangerate-server-p-907301d4b083.herokuapp.com/api/rates")
+    axios
+      .get("https://exchangerate-server-p-907301d4b083.herokuapp.com/api/rates")
       .then((res) => setRates(res.data))
       .catch((err) => console.error("❌ Fetch error:", err));
   }, []);
 
-  // 🔄 อัปเดตเวลาเรียลไทม์
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -24,7 +23,6 @@ export default function ExchangeRates() {
     return () => clearInterval(timer);
   }, []);
 
-  // 🔁 เปลี่ยนหน้าอัตโนมัติทุก 10 วินาที
   useEffect(() => {
     const interval = setInterval(() => {
       setPageIndex((prev) => (prev + 1) % totalPages);
@@ -37,17 +35,23 @@ export default function ExchangeRates() {
     pageIndex * itemsPerPage + itemsPerPage
   );
 
+  const formatRateDisplay = (value) => {
+    const num = parseFloat(value);
+    if (isNaN(num)) return value;
+    return num < 1 ? num.toFixed(4) : num.toFixed(2);
+  };
+
   const formatDateThai = (date) => {
     const months = [
       "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
-      "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."
+      "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
     ];
     const day = date.getDate();
     const month = months[date.getMonth()];
     const year = date.getFullYear() + 543;
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const seconds = date.getSeconds().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
     return `Date: ${day} ${month} ${year} | Time: ${hours}:${minutes}:${seconds}`;
   };
 
@@ -56,9 +60,7 @@ export default function ExchangeRates() {
       <div className="text-center mb-2">
         <h1 className="text-2xl font-bold text-yellow-500">TX Exchange co,.Ltd</h1>
         <h2 className="text-xl font-semibold text-yellow-500">MC125660031</h2>
-        <p className="text-sm text-gray-600 mt-1">
-          {formatDateThai(currentTime)}
-        </p>
+        <p className="text-sm text-gray-600 mt-1">{formatDateThai(currentTime)}</p>
       </div>
 
       <h2 className="text-xl font-bold text-yellow-500 mb-4 text-center bg-yellow-100 px-6 py-1 rounded-full">
@@ -87,8 +89,12 @@ export default function ExchangeRates() {
               {rate.currency}
             </div>
             <div>{rate.denom}</div>
-            <div className="text-green-600 font-semibold">{rate.buying}</div>
-            <div className="text-red-500 font-semibold">{rate.selling}</div>
+            <div className="text-green-600 font-semibold">
+              {formatRateDisplay(rate.buying)}
+            </div>
+            <div className="text-red-500 font-semibold">
+              {formatRateDisplay(rate.selling)}
+            </div>
           </div>
         ))}
 
