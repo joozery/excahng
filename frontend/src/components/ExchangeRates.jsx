@@ -38,7 +38,11 @@ export default function ExchangeRates() {
   const formatRateDisplay = (value) => {
     const num = parseFloat(value);
     if (isNaN(num)) return value;
-    return num < 1 ? num.toFixed(4) : num.toFixed(2);
+    if (num >= 1) {
+      return num.toFixed(2);
+    } else {
+      return parseFloat(num.toFixed(4)).toString(); // remove trailing 0
+    }
   };
 
   const formatDateThai = (date) => {
@@ -56,7 +60,7 @@ export default function ExchangeRates() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col items-center p-6">
+    <div className="min-h-screen bg-white text-black flex flex-col items-center p-6 font-[Prompt]">
       <div className="text-center mb-2">
         <h1 className="text-2xl font-bold text-yellow-500">TX Exchange co,.Ltd</h1>
         <h2 className="text-xl font-semibold text-yellow-500">MC125660031</h2>
@@ -89,12 +93,8 @@ export default function ExchangeRates() {
               {rate.currency}
             </div>
             <div>{rate.denom}</div>
-            <div className="text-green-600 font-semibold">
-              {formatRateDisplay(rate.buying)}
-            </div>
-            <div className="text-red-500 font-semibold">
-              {formatRateDisplay(rate.selling)}
-            </div>
+            <div className="text-green-600 font-semibold">{formatRateDisplay(rate.buying)}</div>
+            <div className="text-red-500 font-semibold">{formatRateDisplay(rate.selling)}</div>
           </div>
         ))}
 
