@@ -38,11 +38,7 @@ export default function ExchangeRates() {
   const formatRateDisplay = (value) => {
     const num = parseFloat(value);
     if (isNaN(num)) return value;
-    if (num >= 1) {
-      return num.toFixed(2);
-    } else {
-      return parseFloat(num.toFixed(4)).toString(); // remove trailing 0
-    }
+    return num >= 1 ? num.toFixed(4) : num.toFixed(4); // ✅ แสดงเต็มแบบ 4 ตำแหน่งเสมอ
   };
 
   const formatDateThai = (date) => {
