@@ -1,4 +1,15 @@
 import { useState } from "react";
+import Decimal from "decimal.js";
+
+function formatNumber(value) {
+  const num = new Decimal(value || "0");
+
+  if (num.greaterThanOrEqualTo(1)) {
+    return num.toFixed(2).toString(); // >= 1 ตัดเหลือ 2 ทศนิยม
+  } else {
+    return num.toFixed(6).toString(); // < 1 ตัดเหลือ 6 ทศนิยม
+  }
+}
 
 export default function AddRate() {
   const [formData, setFormData] = useState({
@@ -9,13 +20,28 @@ export default function AddRate() {
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "buying" || name === "selling") {
+      if (!/^\d*\.?\d*$/.test(value)) {
+        return;
+      }
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("🚀 ส่งข้อมูล:", formData);
-    // TODO: ส่งข้อมูลไป API หรือเก็บ local
+
+    const submitData = {
+      currency: formData.currency,
+      denom: formData.denom,
+      buying: formatNumber(formData.buying),
+      selling: formatNumber(formData.selling),
+    };
+
+    console.log("🚀 ส่งข้อมูล:", submitData);
     alert("เพิ่มเรทเรียบร้อยแล้ว!");
   };
 

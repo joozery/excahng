@@ -1,6 +1,17 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FaEdit, FaSearch, FaTimes } from "react-icons/fa";
+import Decimal from "decimal.js";
+
+// ✅ ฟังก์ชันจัด format ทศนิยม
+function formatNumber(value) {
+  const num = new Decimal(value || "0");
+  if (num.greaterThanOrEqualTo(1)) {
+    return num.toFixed(2).toString(); // ถ้า >=1 เอา 2 ทศนิยม
+  } else {
+    return num.toFixed(6).toString(); // ถ้า <1 เอา 6 ทศนิยม
+  }
+}
 
 export default function Allrate() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,8 +44,8 @@ export default function Allrate() {
     const formData = new FormData();
     formData.append("currency", newRate.currency);
     formData.append("denom", newRate.denom);
-    formData.append("buying", newRate.buying);
-    formData.append("selling", newRate.selling);
+    formData.append("buying", formatNumber(newRate.buying));  // ✅ ฟอร์แมตตอนส่ง
+    formData.append("selling", formatNumber(newRate.selling)); // ✅ ฟอร์แมตตอนส่ง
     if (newRate.flagFile) {
       formData.append("flag", newRate.flagFile);
     }
@@ -58,8 +69,8 @@ export default function Allrate() {
     setNewRate({
       currency: rate.currency,
       denom: rate.denom,
-      buying: rate.buying,
-      selling: rate.selling,
+      buying: formatNumber(rate.buying),   // ✅ ฟอร์แมตตอนเปิดแก้ไข
+      selling: formatNumber(rate.selling), // ✅ ฟอร์แมตตอนเปิดแก้ไข
       flagFile: null,
     });
     setEditingRateId(rate.id);
@@ -111,28 +122,29 @@ export default function Allrate() {
             </tr>
           </thead>
           <tbody>
-            {filteredRates.map((rate, index) => (
-              <tr key={rate.id} className={index % 2 === 0 ? "bg-white" : "bg-yellow-50"}>
-                <td className="px-4 py-2 border flex items-center gap-2">
-                  {rate.flag_url && (
-                    <img src={rate.flag_url} alt="flag" className="w-6 h-4 border rounded" />
-                  )}
-                  {rate.currency}
-                </td>
-                <td className="px-4 py-2 border">{rate.denom}</td>
-                <td className="px-4 py-2 border text-green-600 font-semibold">{rate.buying}</td>
-                <td className="px-4 py-2 border text-red-500 font-semibold">{rate.selling}</td>
-                <td className="px-4 py-2 border text-center">
-                  <button
-                    className="text-blue-600 hover:text-blue-800"
-                    onClick={() => openEditModal(rate)}
-                  >
-                    <FaEdit />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+  {filteredRates.map((rate, index) => (
+    <tr key={rate.id} className={index % 2 === 0 ? "bg-white" : "bg-yellow-50"}>
+      <td className="px-4 py-2 border flex items-center gap-2">
+        {rate.flag_url && (
+          <img src={rate.flag_url} alt="flag" className="w-6 h-4 border rounded" />
+        )}
+        {rate.currency}
+      </td>
+      <td className="px-4 py-2 border">{rate.denom}</td>
+      <td className="px-4 py-2 border text-green-600 font-semibold">{formatNumber(rate.buying)}</td> {/* ✅ */}
+      <td className="px-4 py-2 border text-red-500 font-semibold">{formatNumber(rate.selling)}</td> {/* ✅ */}
+      <td className="px-4 py-2 border text-center">
+        <button
+          className="text-blue-600 hover:text-blue-800"
+          onClick={() => openEditModal(rate)}
+        >
+          <FaEdit />
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
         </table>
       )}
 

@@ -1,5 +1,30 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import Decimal from "decimal.js"; // ✅ import Decimal.js เพื่อ format
+
+// ✅ ใช้ formatNumber ฟังก์ชันเดียวกับหน้า Allrate
+function formatNumber(value) {
+  const num = new Decimal(value || "0");
+
+  let formatted;
+  if (num.greaterThanOrEqualTo(1)) {
+    formatted = num.toFixed(2); // >=1 ให้แค่ 2 ทศนิยม เช่น 33.30
+  } else {
+    formatted = num.toFixed(10); // เผื่อละเอียดก่อน แล้วค่อยตัด
+    let [intPart, decPart] = formatted.split(".");
+    let combined = intPart + decPart;
+    combined = combined.slice(0, 6);
+
+    if (combined.length <= intPart.length) {
+      formatted = intPart;
+    } else {
+      const sliceDecimal = combined.slice(intPart.length);
+      formatted = intPart + "." + sliceDecimal;
+    }
+  }
+
+  return formatted.toString();
+}
 
 export default function ExchangeRates() {
   const [rates, setRates] = useState([]);
@@ -34,12 +59,6 @@ export default function ExchangeRates() {
     pageIndex * itemsPerPage,
     pageIndex * itemsPerPage + itemsPerPage
   );
-
-  const formatRateDisplay = (value) => {
-    const num = parseFloat(value);
-    if (isNaN(num)) return value;
-    return num >= 1 ? num.toFixed(4) : num.toFixed(4); // ✅ แสดงเต็มแบบ 4 ตำแหน่งเสมอ
-  };
 
   const formatDateThai = (date) => {
     const months = [
@@ -89,8 +108,8 @@ export default function ExchangeRates() {
               {rate.currency}
             </div>
             <div>{rate.denom}</div>
-            <div className="text-green-600 font-semibold">{formatRateDisplay(rate.buying)}</div>
-            <div className="text-red-500 font-semibold">{formatRateDisplay(rate.selling)}</div>
+            <div className="text-green-600 font-semibold">{formatNumber(rate.buying)}</div>
+            <div className="text-red-500 font-semibold">{formatNumber(rate.selling)}</div>
           </div>
         ))}
 
