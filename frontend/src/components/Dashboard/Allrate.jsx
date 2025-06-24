@@ -26,7 +26,7 @@ export default function Allrate() {
     flagFile: null,
   });
 
-  const API_URL = "https://exchangerate-server-p-907301d4b083.herokuapp.com/api/rates";
+  const API_URL = "https://exchang-api-78e16288262f.herokuapp.com/api/rates";
 
   useEffect(() => {
     fetchRates();
