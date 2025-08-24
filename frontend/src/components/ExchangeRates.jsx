@@ -36,7 +36,7 @@ export default function ExchangeRates() {
 
   useEffect(() => {
     axios
-      .get("https://exchang-api-78e16288262f.herokuapp.com/api/rates")
+      .get(" https://serverexchang-new-5acf255cee05.herokuapp.com/api/rates")
       .then((res) => setRates(res.data))
       .catch((err) => console.error("❌ Fetch error:", err));
   }, []);
