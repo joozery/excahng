@@ -26,7 +26,7 @@ export default function Allrate() {
     flagFile: null,
   });
 
-  const API_URL = " https://serverexchang-new-5acf255cee05.herokuapp.com/api/rates";
+  const API_URL = "https://apiexchang.devwooyou.space/api/rates";
 
   useEffect(() => {
     fetchRates();
@@ -36,7 +36,15 @@ export default function Allrate() {
     axios
       .get(API_URL)
       .then((res) => setRates(res.data))
-      .catch((err) => console.error("Fetch error:", err));
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        if (err.response) {
+          console.error("Response error:", err.response.status, err.response.data);
+        }
+        if (err.code === 'ERR_CERT_COMMON_NAME_INVALID' || err.code === 'ERR_NETWORK') {
+          alert("ไม่สามารถเชื่อมต่อกับ API ได้ กรุณาตรวจสอบการเชื่อมต่อหรือ SSL certificate");
+        }
+      });
   };
 
   const handleAddOrEditRate = async (e) => {
@@ -60,8 +68,10 @@ export default function Allrate() {
       setIsModalOpen(false);
       setEditingRateId(null);
       setNewRate({ currency: "", denom: "", buying: "", selling: "", flagFile: null });
+      alert(editingRateId !== null ? "แก้ไขข้อมูลเรียบร้อยแล้ว" : "เพิ่มข้อมูลเรียบร้อยแล้ว");
     } catch (err) {
       console.error("Save error:", err);
+      alert(`เกิดข้อผิดพลาด: ${err.response?.data?.message || err.message || "ไม่สามารถบันทึกข้อมูลได้"}`);
     }
   };
 

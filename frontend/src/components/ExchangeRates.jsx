@@ -36,9 +36,14 @@ export default function ExchangeRates() {
 
   useEffect(() => {
     axios
-      .get(" https://serverexchang-new-5acf255cee05.herokuapp.com/api/rates")
+      .get("https://apiexchang.devwooyou.space/api/rates")
       .then((res) => setRates(res.data))
-      .catch((err) => console.error("❌ Fetch error:", err));
+      .catch((err) => {
+        console.error("❌ Fetch error:", err);
+        if (err.response) {
+          console.error("Response error:", err.response.status, err.response.data);
+        }
+      });
   }, []);
 
   useEffect(() => {
